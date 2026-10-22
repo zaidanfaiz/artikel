@@ -1,5 +1,5 @@
 ---
-title: "Tutorial Temporary Root Android dengan GhostLock (2026): Panduan Visual Lengkap"
+title: "Tutorial Temporary Root Android dengan GhostLock (2026)"
 description: "Panduan GhostLock dari cek kernel, unduh APK resmi, konfigurasi Shizuku bila perlu, proses Run, hingga verifikasi root sementara dan penanganan error."
 date: 2026-10-22
 category: "Root & Modding"
@@ -17,8 +17,6 @@ draft: false
 
 ![Infografik GhostLock dan temporary root](/images/ghostlock/cover.svg)
 
-**Catatan visual:** gambar layar yang menyertai panduan ini adalah **ilustrasi alur**, bukan screenshot GhostLock pada perangkat uji. Tampilan antarmuka asli bisa berbeda. Foto umum berasal dari Unsplash, sedangkan diagram dan mockup dibuat untuk membantu pembaca memahami urutan kerja.
-
 ## Apa yang bisa dan tidak bisa dilakukan GhostLock?
 
 - **Bisa:** pada build kernel yang betul-betul cocok, memperoleh akses root untuk sesi boot yang sedang berlangsung.
@@ -29,30 +27,15 @@ draft: false
 
 Rujukan utama: [GhostLock App — dokumentasi pengembang](https://github.com/YuKongA/ghostlock-app) dan [penjelasan temporary-root lintas perangkat](https://github.com/awesome-android-root/awesome-android-root/blob/main/docs/rooting-guides/root-without-unlocking-bootloader.md).
 
-## 1. Periksa dukungan kernel lebih dulu
+## 1. Bukti tampilan GhostLock di POCO F7 Ultra
 
-![Ilustrasi pemeriksaan versi kernel dan status match](/images/ghostlock/01-kernel-check.svg)
+Dari screenshot perangkat yang digunakan, GhostLock menunjukkan **Supported — Profile ready** pada **POCO F7 Ultra**. Kernel yang ditampilkan adalah `6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k`, dengan SoC **QTI SM8750**. Tombol **Safe mode** dan **Run via Shizuku** terlihat dalam kondisi nonaktif.
 
-GhostLock mencocokkan **teks versi kernel secara persis** terhadap profil yang disediakan. Nama chipset atau nama model HP saja tidak cukup.
+Log GhostLock pada screenshot berikutnya memperlihatkan proses eksploit sedang berjalan, termasuk baris **exploit start**. Screenshot tersebut saja tidak memperlihatkan baris akhir proses.
 
-1. Di ponsel, buka **Pengaturan → Tentang ponsel**. Cari **Versi kernel** dan **Pembaruan keamanan**. Nama menu bisa berbeda antarvendor.
-2. Catat versi Android, model perangkat, build number, tanggal security patch, dan **seluruh** teks versi kernel.
-3. Cocokkan dengan [Supported Devices resmi GhostLock](https://github.com/YuKongA/ghostlock-app/blob/main/docs/kernel_profiles/SUPPORTED_DEVICES.md). Jika build lu tidak tertera, **jangan menganggapnya didukung**.
-4. Setelah aplikasi GhostLock dipasang, lihat indikator profil kernel di aplikasinya. Hanya lanjut bila hasilnya sesuai dan valid.
+Pada screenshot ReSukiSU, status **Berfungsi**, mode **LKM / jailbreak**, dan **SuperUser: 9, Modul: 6** terlihat pada perangkat yang sama, dengan **Android 16**. Ini dokumentasi kondisi yang ditampilkan pada perangkat, bukan jaminan bahwa semua firmware POCO F7 Ultra kompatibel.
 
-Jika lu memiliki PC dengan [Android SDK Platform Tools resmi](https://developer.android.com/tools/releases/platform-tools), berikut perintah **hanya untuk membaca informasi**:
-
-```bash
-adb devices
-adb shell uname -r
-adb shell getprop ro.product.model
-adb shell getprop ro.build.version.release
-adb shell getprop ro.build.version.security_patch
-```
-
-::note[Versi kernel contoh seperti 6.1.x atau 6.12.x bukan bukti kompatibilitas. Harus ada kecocokan string build dan profil yang valid. Kernel yang tidak terdaftar tidak boleh dipaksa menggunakan offset dari perangkat lain.]
-
-## 2. Siapkan aplikasi yang dibutuhkan
+## 1. Siapkan aplikasi yang dibutuhkan
 
 ![Ilustrasi perbedaan fungsi GhostLock, Root Manager dan Shizuku](/images/ghostlock/02-tools.svg)
 
@@ -77,7 +60,7 @@ Sumber yang sebaiknya lu gunakan:
 
 *Foto ponsel sebagai ilustrasi umum: [Unsplash](https://unsplash.com/license). Foto ini bukan bukti pengujian GhostLock.*
 
-## 3. Jalankan Shizuku jika profil membutuhkannya
+## 2. Jalankan Shizuku jika profil membutuhkannya
 
 ![Ilustrasi pengaturan Shizuku melalui Wireless Debugging](/images/ghostlock/03-shizuku.svg)
 
@@ -95,7 +78,7 @@ Detail layar dan cara pairing dapat berubah menurut Android dan firmware: lihat 
 
 ::note[Jika perangkat lu tidak memakai rute Shizuku, jangan mengaktifkan pengaturan secara acak. Ikuti indikator dan profil aplikasi pada kernel yang benar.]
 
-## 4. Jalankan GhostLock
+## 3. Jalankan GhostLock
 
 ![Ilustrasi layar pemeriksaan support dan tombol Run di GhostLock](/images/ghostlock/04-run.svg)
 
@@ -114,7 +97,7 @@ Setelah seluruh prasyarat terpenuhi:
 
 Menurut pengembang, bila komponen `ksud` dari root manager tidak tersedia, jalur tertentu dapat memperoleh UID 0 tanpa memuat modul KernelSU. Itu berarti **status root manager belum tentu aktif**, walau proses tertentu mungkin mendapat hak root. Jangan langsung menyimpulkan dukungan semua modul berhasil.
 
-## 5. Verifikasi apakah temporary root aktif
+## 4. Verifikasi apakah temporary root aktif
 
 ![Ilustrasi terminal sebelum dan sesudah memperoleh izin superuser](/images/ghostlock/05-verify.svg)
 
@@ -148,7 +131,7 @@ Perlu diingat: `adb shell` tidak otomatis berhak root meski aplikasi lain sudah 
 
 **Output di atas adalah contoh edukasi, bukan hasil pengujian di HP tertentu.** Untuk tutorial pengujian sebenarnya, dokumentasikan versi kernel, status log, manager, dan hasil UID asli perangkat lu.
 
-## 6. Apa yang terjadi setelah restart?
+## 5. Apa yang terjadi setelah restart?
 
 ![Ilustrasi sesi root yang hilang setelah reboot penuh](/images/ghostlock/06-reboot.svg)
 
@@ -159,7 +142,7 @@ Temporary root biasanya hanya berlaku pada **boot session** saat ini. Melakukan 
 - Jika aplikasi banking atau aplikasi sensitif mendeteksi lingkungan yang berubah, jangan menjanjikan metode ini pasti menyembunyikan root.
 - Jangan mencoba mempertahankan hak root dengan modifikasi partisi tanpa menguasai prosedur pemulihan.
 
-## 7. Mengatasi masalah umum
+## 6. Mengatasi masalah umum
 
 ### Status "Unsupported kernel" atau "No matching profile"
 
@@ -181,7 +164,7 @@ Periksa apakah APK manager yang dipilih menyediakan `libksud.so` dan benar-benar
 
 Hentikan percobaan. Jangan menekan Run berkali-kali atau mengulang secara membabi buta. Catat versi firmware, log yang masih dapat diakses, dan baca laporan perangkat yang sama di [Issues proyek resmi](https://github.com/YuKongA/ghostlock-app/issues). Bila data penting belum dibackup, prioritaskan keamanan data, bukan kelanjutan eksperimen.
 
-## 8. FAQ singkat
+## 7. FAQ singkat
 
 ### Apakah perlu membuka bootloader?
 
@@ -199,9 +182,6 @@ Tidak. Perangkat yang sama pun bisa punya firmware dan versi kernel berbeda. Coc
 
 Belum tentu. Aplikasi menyediakan alur langsung, namun beberapa perangkat membutuhkan Shizuku/ADB untuk rute yang direkomendasikan atau untuk diagnostik.
 
-### Kenapa tutorial ini memakai diagram, bukan foto hasil sukses?
-
-Karena diagramnya menggambarkan **urutan resmi dan potensi status** dengan jelas tanpa berpura-pura sebagai screenshot pengujian nyata. Foto hasil GhostLock hanya layak diklaim sebagai "tested" setelah diuji pada perangkat dan build yang benar.
 
 ## Sumber resmi & kredit visual
 
@@ -214,4 +194,4 @@ Karena diagramnya menggambarkan **urutan resmi dan potensi status** dengan jelas
 - [Awesome Android Root — latar belakang GhostLock](https://github.com/awesome-android-root/awesome-android-root/blob/main/docs/rooting-guides/root-without-unlocking-bootloader.md)
 - [Unsplash License — foto ilustrasi perangkat](https://unsplash.com/license)
 
-**Kredit:** ilustrasi alur GhostLock dirancang untuk Zaidan Journal. Foto smartphone bersumber dari Unsplash. Tidak ada screenshot hasil root yang diklaim berasal dari pengujian nyata.
+**Kredit:** Diagram tutorial dibuat untuk Zaidan Journal. Foto ilustrasi umum bersumber dari Unsplash; dokumentasi perangkat POCO F7 Ultra disediakan pemilik perangkat.
