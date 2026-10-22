@@ -27,7 +27,7 @@
  const articles=fs.readdirSync('content/posts').filter(f=>f.endsWith('.md')).map(parse).filter(p=>!p.draft).sort((a,b)=>b.date.localeCompare(a.date));
  if(!articles.length)throw Error('No published articles');
  fs.writeFileSync(path.join(dest,'assets/articles.js'),'window.ARTICLES='+JSON.stringify(articles)+';\n');
- const src=name=>fs.readFileSync(name,'utf8').replaceAll('/artikel/',prefix).replaceAll('./assets/',prefix+'assets/');
+ const src=name=>fs.readFileSync(name,'utf8').replaceAll('/artikel/',prefix).replaceAll('./assets/',prefix+'assets/').replaceAll('https://zaidanfaiz.github.io',domain);
  const home=src('index.html');
  for(const page of ['index.html','studio.html','about.html'])fs.writeFileSync(path.join(dest,page),src(page));
  const write=(name,data)=>{const target=path.join(dest,name);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,data)};
