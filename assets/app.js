@@ -1,0 +1,50 @@
+(function(){
+  const A=window.ARTICLES||[],base=document.querySelector('meta[name="site-base"]')?.content||'/artikel/';
+  const url=(slug)=>base+'artikel/'+encodeURIComponent(slug)+'/', esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const photo=s=>/^(https?:\/\/|\/(?!\/))/.test(s||'')? (s.startsWith('/')?base+s.slice(1):s):base+'assets/default.svg';
+  const when=s=>new Date(s+'T00:00:00Z').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+  const wordtime=s=>Math.max(1,Math.ceil((s||'').split(/\s+/).length/210));
+  const articles=A.filter(x=>!x.draft).sort((a,b)=>b.date.localeCompare(a.date));
+  const app=document.getElementById('app');
+  function card(x){return '<article class="article-card" data-search="'+esc([x.title,x.description,x.category,...x.tags].join(' ').toLowerCase())+'" data-cat="'+esc(x.category)+'"><a class="thumb" href="'+url(x.slug)+'"><img src="'+esc(photo(x.cover))+'" loading="lazy" alt="'+esc(x.title)+'"></a><div class="card-body"><div class="card-meta"><span class="cat">'+esc(x.category)+'</span><span>•</span><span>'+when(x.date)+'</span></div><h3><a href="'+url(x.slug)+'">'+esc(x.title)+'</a></h3><p>'+esc(x.description)+'</p><div class="card-foot"><span>'+wordtime(x.body)+' menit baca</span><a href="'+url(x.slug)+'">Baca selengkapnya ↗</a></div></div></article>'}
+  function featured(x,large){return '<a href="'+url(x.slug)+'" class="feature"><img src="'+esc(photo(x.cover))+'" alt="'+esc(x.title)+'"><div class="feature-content"><span>'+esc(large?'FEATURED STORY / '+x.category:x.category+' / '+when(x.date))+'</span><h2>'+esc(x.title)+'</h2>'+(large?'<p>'+esc(x.description)+'</p>':'')+'</div></a>'}
+  function listing(){
+    document.title='Zaidan Journal — Tutorial Android, Root & Development';
+    const main=articles.find(x=>x.featured)||articles[0],others=articles.filter(x=>x!==main).slice(0,2);
+    app.innerHTML='<section class="hero"><div class="wrap hero-inner"><span class="eyebrow">✦ INDEPENDENT TECH JOURNAL / INDONESIA</span><h1>Understand the tech.<br><em>Own the knowledge.</em></h1><p>Eksplorasi Android, rooting, modding, dan software development melalui artikel yang praktis, jelas, dan bisa dipelajari.</p><div class="hero-actions"><a class="primary" href="#artikel">Jelajahi artikel ↗</a><a class="ghost" href="'+base+'about.html">Tentang jurnal ↗</a></div><div class="featuregrid">'+featured(main,true)+'<div class="side-features">'+others.map(x=>featured(x,false)).join('')+'</div></div></div></section><section class="wrap content-area" id="artikel"><div class="section-title"><div><span class="eyebrow">THE JOURNAL / COLLECTION</span><h2>Jelajahi tulisan terbaru</h2><p>Penjelasan mendalam, eksperimen, dan panduan langkah demi langkah.</p></div><span class="smallcount">'+articles.length+' ARTIKEL</span></div><div class="tools"><div class="filters" id="filters"></div><label class="search">⌕ <input type="search" id="search" placeholder="Cari topik atau tutorial..." aria-label="Cari artikel"></label></div><div class="grid" id="cards">'+articles.map(card).join('')+'</div><div class="empty" id="nothing" hidden>Belum ada artikel yang cocok. Coba kata kunci lain.</div><div class="cta"><div><span class="eyebrow">KEEP THE KNOWLEDGE MOVING</span><h2>Punya tutorial yang ingin dibagikan?</h2><p>Tulis artikel sendiri dengan foto, video, dan potongan kode.</p></div><a href="'+base+'studio.html">Masuk ke studio artikel ↗</a></div></section>';
+    const cats=['Semua',...new Set(articles.map(x=>x.category))];const filters=document.getElementById('filters'),search=document.getElementById('search');
+    filters.innerHTML=cats.map((c,i)=>'<button class="filter '+(i===0?'active':'')+'" data-category="'+esc(c)+'">'+esc(c)+'</button>').join('');
+    let cat='Semua';function filter(){let n=0;document.querySelectorAll('.article-card').forEach(el=>{const ok=(cat==='Semua'||el.dataset.cat===cat)&&el.dataset.search.includes(search.value.toLowerCase().trim());el.hidden=!ok;if(ok)n++});document.getElementById('nothing').hidden=n!==0}
+    filters.addEventListener('click',e=>{const btn=e.target.closest('button[data-category]');if(!btn)return;cat=btn.dataset.category;filters.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));filter()});search.addEventListener('input',filter);
+  }
+  function inline(x){return esc(x).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/!\[([^\]]*)\]\((https?:\/\/[^ )]+|\/[^ )]+)\)/g,(_,alt,src)=>'<img src="'+esc(photo(src))+'" loading="lazy" alt="'+alt+'">').replace(/\[([^\]]+)\]\((https?:\/\/[^ )]+)\)/g,(_,t,u)=>'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+t+'</a>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}
+  function parse(md){
+    const lines=(md||'').replace(/\r/g,'').split('\n'),toc=[];let result='';
+    for(let i=0;i<lines.length;){
+      const l=lines[i];if(!l.trim()){i++;continue;}
+      const code=l.match(/^```([\w-]*)/);if(code){i++;let list=[];while(i<lines.length&&!/^```/.test(lines[i]))list.push(lines[i++]);i++;result+='<div class="code-block"><div class="code-head"><span>'+esc(code[1]||'TERMINAL')+'</span><button type="button" class="copycode">Salin</button></div><pre><code>'+esc(list.join('\n'))+'</code></pre></div>';continue}
+      const head=l.match(/^(#{1,3})\s+(.*)/);if(head){let level=head[1].length,id='bagian-'+toc.length;toc.push({level,id,title:head[2]});result+='<h'+level+' id="'+id+'">'+inline(head[2])+'</h'+level+'>';i++;continue}
+      const video=l.match(/^::youtube\[(.+)\]/);if(video){const ref=video[1].match(/(?:v=|youtu\.be\/|embed\/)?([a-zA-Z0-9_-]{11})/);result+=ref?'<div class="yt"><iframe loading="lazy" title="Video tutorial" src="https://www.youtube-nocookie.com/embed/'+ref[1]+'" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>':'<p>Video YouTube tidak valid.</p>';i++;continue}
+      const note=l.match(/^::(note|warning)\[(.*)\]$/);if(note){result+='<div class="callout '+(note[1]==='warning'?'warning':'')+'">'+inline(note[2])+'</div>';i++;continue}
+      const gallery=l.match(/^::gallery\[(.*)\]$/);if(gallery){result+='<div class="gallery">'+gallery[1].split('|').map((p,j)=>'<a href="'+esc(photo(p.trim()))+'" target="_blank" rel="noopener noreferrer"><img loading="lazy" alt="Foto '+(j+1)+'" src="'+esc(photo(p.trim()))+'"></a>').join('')+'</div>';i++;continue}
+      if(/^>\s?/.test(l)){result+='<blockquote>'+inline(l.replace(/^>\s?/,''))+'</blockquote>';i++;continue}
+      if(/^[-*]\s/.test(l)||/^\d+\.\s/.test(l)){const ordered=/^\d+\.\s/.test(l),arr=[];while(i<lines.length&&(ordered?/^\d+\.\s/:/^[-*]\s/).test(lines[i]))arr.push(lines[i++].replace(ordered?/^\d+\.\s/:/^[-*]\s/,''));const name=ordered?'ol':'ul';result+='<'+name+'>'+arr.map(v=>'<li>'+inline(v)+'</li>').join('')+'</'+name+'>';continue}
+      let par=[];while(i<lines.length&&lines[i].trim()&&!/^(#{1,3}\s|```|::|>\s?|[-*]\s|\d+\.\s)/.test(lines[i]))par.push(lines[i++]);if(par.length)result+='<p>'+par.map(inline).join(' ')+'</p>';else i++;
+    }
+    return {html:result,toc}
+  }
+  function article(x){
+    document.title=x.title+' — Zaidan Journal';const desc=document.querySelector('meta[name="description"]');if(desc)desc.content=x.description;
+    const p=parse(x.body),related=articles.filter(y=>y.slug!==x.slug).slice(0,3),link=location.href;
+    app.innerHTML='<section class="post-head"><div class="wrap"><div class="crumbs"><a href="'+base+'">Beranda</a> › <a href="'+base+'">Artikel</a> › '+esc(x.category)+'</div><span class="eyebrow">● '+esc(x.category.toUpperCase())+'</span><h1>'+esc(x.title)+'</h1><p class="dek">'+esc(x.description)+'</p><div class="byline"><span class="avatar">ZF</span><div><strong>Zaidan Faiz</strong><small>'+when(x.date)+' · '+wordtime(x.body)+' menit baca</small></div></div></div></section><div class="wrap post-cover"><img src="'+esc(photo(x.cover))+'" alt="'+esc(x.title)+'"></div><div class="wrap post-layout"><aside><div class="toc"><b>DALAM ARTIKEL INI</b>'+p.toc.filter(z=>z.level>1).map(z=>'<a href="#'+z.id+'">'+esc(z.title)+'</a>').join('')+'</div></aside><article class="prose">'+p.html+'<div class="share-row"><button id="share-link">Salin link artikel ↗</button><a href="'+base+'">← Artikel lainnya</a></div></article></div><section class="wrap related"><div class="section-title"><div><span class="eyebrow">KEEP READING</span><h2>Artikel lainnya</h2></div></div><div class="grid">'+related.map(card).join('')+'</div></section>';
+    document.querySelectorAll('.copycode').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.closest('.code-block').querySelector('code').textContent);b.textContent='Tersalin ✓'}catch{b.textContent='Gagal menyalin'}});
+    document.getElementById('share-link').onclick=async()=>{try{await navigator.clipboard.writeText(link);document.getElementById('share-link').textContent='Link tersalin ✓'}catch{prompt('Salin tautan:',link)}};
+    window.onscroll=()=>{const max=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=(max>0?scrollY/max*100:0)+'%'};
+  }
+  if(!app)return;
+  const params=new URLSearchParams(location.search),post=window.POST_SLUG||params.get('post'),selected=articles.find(x=>x.slug===post);
+  if(post){if(selected)article(selected);else app.innerHTML='<section class="simple-page wrap"><span class="eyebrow">404 / NOT FOUND</span><h1>Artikel tidak ditemukan.</h1><p>Artikel mungkin dihapus atau URL salah.</p><a class="primary" href="'+base+'">Kembali ke beranda ↗</a></section>';}else listing();
+  document.querySelector('.menuBtn')?.addEventListener('click',()=>document.querySelector('.navlinks')?.classList.toggle('open'));
+  document.querySelector('.themeBtn')?.addEventListener('click',()=>{document.body.classList.toggle('dark');localStorage.setItem('zj-theme',document.body.classList.contains('dark')?'dark':'light')});
+  if(localStorage.getItem('zj-theme')==='dark')document.body.classList.add('dark');
+})();

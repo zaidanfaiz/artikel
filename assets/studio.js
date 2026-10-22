@@ -1,0 +1,15 @@
+(function(){
+ const ids=['title','category','description','cover','date','tags','featured','draft','body'];
+ const $=id=>document.getElementById(id),msg=s=>$('status').textContent=s;
+ const slug=s=>s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'artikel-baru';
+ const read=()=>Object.fromEntries(ids.map(k=>[k,(['draft','featured'].includes(k)?$(k).checked:$(k).value)]));
+ const render=()=>{$('previewtitle').textContent=$('title').value||'Judul artikelmu';$('previewdesc').textContent=$('description').value||'Deskripsi singkatnya muncul di sini.';$('previewbody').textContent=$('body').value.slice(0,850)||'Isi artikel akan muncul di sini saat lu mengetik.'};
+ const yaml=v=>'"'+String(v).replaceAll('\\','\\\\').replaceAll('"','\\"').replaceAll('\n',' ').trim()+'"';
+ const file=()=>{let a=read();if(!a.title.trim()||!a.description.trim()||!a.body.trim()){msg('Isi judul, deskripsi, dan konten terlebih dahulu.');return null;}let text='---\ntitle: '+yaml(a.title)+'\ndescription: '+yaml(a.description)+'\ndate: '+(a.date||new Date().toISOString().slice(0,10))+'\ncategory: '+yaml(a.category)+'\ntags: ['+a.tags.split(',').map(s=>s.trim()).filter(Boolean).map(yaml).join(', ')+']\ncover: '+yaml(a.cover||'/assets/default.svg')+'\nfeatured: '+a.featured+'\ndraft: '+a.draft+'\n---\n\n'+a.body.trim()+'\n';return {name:slug(a.title)+'.md',text}};
+ const stored=localStorage.getItem('zj-article-draft');if(stored){try{const a=JSON.parse(stored);ids.forEach(k=>{if(a[k]!==undefined){if(['draft','featured'].includes(k))$(k).checked=a[k];else $(k).value=a[k]}})}catch{}}if(!$('date').value)$('date').value=new Date().toLocaleDateString('en-CA');
+ render();$('post-form').addEventListener('input',render);
+ document.querySelectorAll('[data-insert]').forEach(b=>b.addEventListener('click',()=>{let v={image:'\n![Deskripsi foto](https://images.unsplash.com/URL_FOTO)\n',youtube:'\n::youtube[ID_VIDEO_YOUTUBE]\n',code:'\n```bash\nadb devices\n```\n',gallery:'\n::gallery[https://example.com/foto1.jpg|https://example.com/foto2.jpg]\n',warning:'\n::warning[Cadangkan data dan pastikan kompatibilitas perangkat sebelum melanjutkan.]\n'}[b.dataset.insert];const t=$('body'),start=t.selectionStart,end=t.selectionEnd;t.setRangeText(v,start,end,'end');t.focus();render()}));
+ $('save').onclick=()=>{try{localStorage.setItem('zj-article-draft',JSON.stringify(read()));msg('Draf tersimpan di browser ini ✓')}catch{msg('Gagal menyimpan; penyimpanan browser mungkin tidak tersedia.')}};
+ $('copy').onclick=async()=>{const f=file();if(!f)return;try{await navigator.clipboard.writeText(f.text);msg('Markdown disalin ✓')}catch{msg('Clipboard tidak tersedia, gunakan tombol Unduh.')}}
+ $('download').onclick=()=>{const f=file();if(!f)return;const blob=new Blob([f.text],{type:'text/markdown;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=f.name;document.body.append(a);a.click();a.remove();URL.revokeObjectURL(u);msg('File '+f.name+' berhasil disiapkan. Unggah ke GitHub untuk tayang.')};
+})();
